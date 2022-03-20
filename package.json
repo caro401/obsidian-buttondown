@@ -1,6 +1,6 @@
 {
   "name": "obsidian-buttondown-plugin",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Send your Obsidian notes to your buttondown.email account as email drafts.",
   "main": "main.js",
   "scripts": {
