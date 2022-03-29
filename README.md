@@ -13,6 +13,11 @@ This plugin allows you to write drafts for your emails in [Obsidian](https://obs
 5. Call the command "Create a new Buttondown draft from this note" from the Command Palette (Ctrl-P) to create a new draft in Buttondown, where the email subject is the filename of your note, and the email body is the content of your note
 6. See your drafts in Buttondown [here](https://buttondown.email/emails/drafts), where you can edit and preview the draft, then schedule or send the email to your list.
 
+## Support me
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/U6U7BUEZ6)
+
+
 ## How to make a release
 
 - Update `minAppVersion` manually in `manifest.json` if required, then `npm version patch`, `npm version minor` or `npm version major` .
