@@ -16,7 +16,7 @@ export default class ButtondownPlugin extends Plugin {
 			return;
 		}
 		try {
-			const result = await fetch("https://api.buttondown.email/v1/drafts", {
+			const result = await fetch("https://api.buttondown.email/v1/emails", {
 				method: "POST",
 				headers: new Headers({
 					Authorization: `Token ${this.settings.APIKey}`,
@@ -24,7 +24,8 @@ export default class ButtondownPlugin extends Plugin {
 				}),
 				body: JSON.stringify({
 					"body": body,
-					"subject": title
+					"subject": title,
+					"status": "draft",
 				}),
 			});
 
@@ -83,7 +84,7 @@ class SampleSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('API key')
-			.setDesc('Find it at https://buttondown.email/settings/programming')
+			.setDesc('Find it at https://buttondown.email/settings#api')
 			.addText(text => text
 				.setPlaceholder('Enter your secret')
 				.setValue(this.plugin.settings.APIKey)
