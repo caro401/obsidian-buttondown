@@ -1,6 +1,6 @@
 {
   "name": "obsidian-buttondown-plugin",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "Send your Obsidian notes to your buttondown.email account as email drafts.",
   "main": "main.js",
   "scripts": {
@@ -25,5 +25,8 @@
     "obsidian": "^1.10.0",
     "tslib": "^2.8.1",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "browser-image-compression": "^2.0.2"
   }
 }

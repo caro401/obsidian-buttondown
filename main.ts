@@ -1,11 +1,19 @@
 import { App, Editor, MarkdownView, Plugin, Notice, PluginSettingTab, Setting, TFile } from 'obsidian';
+import imageCompression from 'browser-image-compression';
+
+const SIDE_OPTIONS = ['longest', 'height', 'width'] as const;
+type sidePreference = typeof SIDE_OPTIONS[number];
 
 interface ButtondownPluginSettings {
 	APIKey: string;
+	sidePreference: sidePreference;
+	resizeLimit: number;
 }
 
 const DEFAULT_SETTINGS: ButtondownPluginSettings = {
-	APIKey: ''
+	APIKey: '',
+	sidePreference: 'longest',
+	resizeLimit: 1200
 }
 
 export default class ButtondownPlugin extends Plugin {
@@ -18,8 +26,45 @@ export default class ButtondownPlugin extends Plugin {
 
 		try {
 			const arrayBuffer = await this.app.vault.readBinary(file);
+			// browser-image-compression requires a File to work with, so first construct a new File
+			const imageFile = new File( 
+			[arrayBuffer], 
+			file.name, 
+			{ type: `image/${file.extension}` }
+			);
+			
+			const img = await createImageBitmap(imageFile);
+			const { width, height } = img;
+			
+			// Determining resize constraint
+			let maxWidthOrHeight: number | undefined;
+			switch (this.settings.sidePreference) {
+				case 'longest':
+					maxWidthOrHeight = this.settings.resizeLimit;
+					break;
+				case 'width':
+					maxWidthOrHeight = width > this.settings.resizeLimit ? this.settings.resizeLimit : undefined;
+					break;
+				case 'height':
+					maxWidthOrHeight = height > this.settings.resizeLimit ? this.settings.resizeLimit : undefined;
+					break;
+			};
+
+			// Resizing image
+			let processedFile = imageFile;
+			if (maxWidthOrHeight && (width > maxWidthOrHeight || height > maxWidthOrHeight)) {
+				const options = {
+				maxWidthOrHeight: maxWidthOrHeight,
+				useWebWorker: true,
+				fileType: `image/${file.extension}` as any
+				};
+
+			processedFile = await imageCompression(imageFile, options);
+			new Notice(`Resized ${file.name} before upload`);
+			}
+
 			const formData = new FormData();
-			formData.append('image', new Blob([arrayBuffer], { type: `image/${file.extension}` }), file.name);
+			formData.append('image', processedFile, file.name);
 
 			const result = await fetch("https://api.buttondown.email/v1/images", {
 				method: "POST",
@@ -161,5 +206,35 @@ class SampleSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				})
 			);
+
+		new Setting(containerEl)  
+   		 	.setName('Resize by')  
+    		.addDropdown((dropdown) => dropdown  
+          		.addOption('longest', 'Longest Side')  
+          		.addOption('height', 'Height')  
+          		.addOption('width', 'Width')  
+          		.setValue(this.plugin.settings.sidePreference)  
+          		.onChange(async (value) => {  
+             		this.plugin.settings.sidePreference = value as sidePreference;  
+             		await this.plugin.saveSettings();  
+          		})
+			);  
+
+		new Setting(containerEl)  
+    		.setName('Max size')  
+    		.setDesc('Buttondown recommendens images to be 1200 by 1200 px')  
+    		.addText((text) => text  
+          		.setPlaceholder('1200')  
+          		.setValue(String(this.plugin.settings.resizeLimit))  
+          		.onChange(async (value) => {  
+					const numValue = parseInt(value);
+    				if (!isNaN(numValue) && numValue > 0) {
+        				this.plugin.settings.resizeLimit = numValue;
+        				await this.plugin.saveSettings();
+    				} else {
+        				new Notice('Please enter a whole positive number');
+    				}
+          })
+    	);	
 	}
 }
